@@ -22,9 +22,6 @@ jobs:
   clippy:
     runs-on: ubuntu-latest
     name: ${{ matrix.toolchain }} / clippy
-    permissions:
-      contents: read
-      checks: write
     strategy:
       fail-fast: false
       matrix:
