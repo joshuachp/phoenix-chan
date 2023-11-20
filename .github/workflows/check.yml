@@ -5,6 +5,8 @@ permissions:
   contents: read
 env:
   CARGO_TERM_COLOR: always
+  SCCACHE_GHA_ENABLED: "true"
+  RUSTC_WRAPPER: "sccache"
 jobs:
   fmt:
     runs-on: ubuntu-latest
@@ -35,6 +37,10 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           components: clippy
+      - name: Install sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.3
+      - name: Run sccache stat for check
+        run: ${SCCACHE_PATH} --show-stats
       - name: cargo clippy
         run: cargo clippy --all-targets --all-features --workspace -- -D warnings
   doc:
@@ -46,6 +52,10 @@ jobs:
           submodules: true
       - name: Install nightly
         uses: dtolnay/rust-toolchain@nightly
+      - name: Install sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.3
+      - name: Run sccache stat for check
+        run: ${SCCACHE_PATH} --show-stats
       - name: cargo doc
         run: cargo doc --no-deps --all-features --workspace
         env:
@@ -59,6 +69,10 @@ jobs:
           submodules: true
       - name: Install stable
         uses: dtolnay/rust-toolchain@stable
+      - name: Install sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.3
+      - name: Run sccache stat for check
+        run: ${SCCACHE_PATH} --show-stats
       - name: cargo install cargo-hack
         uses: taiki-e/install-action@cargo-hack
       - name: cargo hack
@@ -77,5 +91,9 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.msrv }}
+      - name: Install sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.3
+      - name: Run sccache stat for check
+        run: ${SCCACHE_PATH} --show-stats
       - name: cargo +${{ matrix.msrv }} check
         run: cargo check --workspace
