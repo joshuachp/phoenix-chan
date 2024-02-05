@@ -38,7 +38,7 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           components: clippy
       - name: Install sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.3
+        uses: mozilla-actions/sccache-action@v0.0.4
       - name: Run sccache stat for check
         run: ${SCCACHE_PATH} --show-stats
       - name: cargo clippy
@@ -53,7 +53,7 @@ jobs:
       - name: Install nightly
         uses: dtolnay/rust-toolchain@nightly
       - name: Install sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.3
+        uses: mozilla-actions/sccache-action@v0.0.4
       - name: Run sccache stat for check
         run: ${SCCACHE_PATH} --show-stats
       - name: cargo doc
@@ -70,7 +70,7 @@ jobs:
       - name: Install stable
         uses: dtolnay/rust-toolchain@stable
       - name: Install sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.3
+        uses: mozilla-actions/sccache-action@v0.0.4
       - name: Run sccache stat for check
         run: ${SCCACHE_PATH} --show-stats
       - name: cargo install cargo-hack
@@ -93,7 +93,7 @@ jobs:
       - name: Install cargo minimal-versions
         uses: taiki-e/install-action@cargo-minimal-versions
       - name: Install sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.3
+        uses: mozilla-actions/sccache-action@v0.0.4
       - name: Run sccache stat for check
         run: ${SCCACHE_PATH} --show-stats
       - name: rustup default stable
@@ -115,7 +115,7 @@ jobs:
         with:
           toolchain: ${{ matrix.msrv }}
       - name: Install sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.3
+        uses: mozilla-actions/sccache-action@v0.0.4
       - name: Run sccache stat for check
         run: ${SCCACHE_PATH} --show-stats
       - name: cargo +${{ matrix.msrv }} check

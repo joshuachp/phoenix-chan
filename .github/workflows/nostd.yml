@@ -21,7 +21,7 @@ jobs:
       - name: Install stable
         uses: dtolnay/rust-toolchain@stable
       - name: Install sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.3
+        uses: mozilla-actions/sccache-action@v0.0.4
       - name: Run sccache stat for check
         run: ${SCCACHE_PATH} --show-stats
       - name: rustup target add ${{ matrix.target }}

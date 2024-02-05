@@ -17,7 +17,7 @@ jobs:
       - name: Install nightly
         uses: dtolnay/rust-toolchain@nightly
       - name: Install sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.3
+        uses: mozilla-actions/sccache-action@v0.0.4
       - name: Run sccache stat for check
         run: ${SCCACHE_PATH} --show-stats
       - run: |
@@ -62,7 +62,7 @@ jobs:
           toolchain: ${{ env.NIGHTLY }}
           components: miri
       - name: Install sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.3
+        uses: mozilla-actions/sccache-action@v0.0.4
       - name: Run sccache stat for check
         run: ${SCCACHE_PATH} --show-stats
       - name: cargo miri test
@@ -78,7 +78,7 @@ jobs:
       - name: Install stable
         uses: dtolnay/rust-toolchain@stable
       - name: Install sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.3
+        uses: mozilla-actions/sccache-action@v0.0.4
       - name: Run sccache stat for check
         run: ${SCCACHE_PATH} --show-stats
       - name: cargo test --test loom
