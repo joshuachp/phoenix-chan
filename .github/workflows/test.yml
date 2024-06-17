@@ -8,8 +8,6 @@ env:
   CARGO_TERM_COLOR: always
   SCCACHE_GHA_ENABLED: "true"
   RUSTC_WRAPPER: "sccache"
-  # Enable logging otherwise the logging lines will count as not covered in the test coverage
-  RUST_LOG: trace
 jobs:
   required:
     runs-on: ubuntu-latest
@@ -59,6 +57,9 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     name: ubuntu / stable / coverage
+    env:
+      # Enable logging otherwise the logging lines will count as not covered in the test coverage
+      RUST_LOG: trace
     steps:
       - uses: actions/checkout@v4
         with:
