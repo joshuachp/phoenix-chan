@@ -18,7 +18,7 @@ jobs:
       - name: Install nightly
         uses: dtolnay/rust-toolchain@nightly
       - name: Install sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.4
+        uses: mozilla-actions/sccache-action@v0.0.5
       - run: |
           # to get the symbolizer for debug symbol resolution
           sudo apt install llvm
@@ -61,7 +61,7 @@ jobs:
           toolchain: ${{ env.NIGHTLY }}
           components: miri
       - name: Install sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.4
+        uses: mozilla-actions/sccache-action@v0.0.5
       - name: cargo miri test
         run: cargo miri test
         env:
@@ -75,7 +75,7 @@ jobs:
       - name: Install stable
         uses: dtolnay/rust-toolchain@stable
       - name: Install sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.4
+        uses: mozilla-actions/sccache-action@v0.0.5
       - name: cargo test --test loom
         run: cargo test --release --test loom
         env:
