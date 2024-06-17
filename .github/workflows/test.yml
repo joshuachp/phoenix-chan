@@ -1,12 +1,15 @@
 name: test
 on:
   workflow_call:
+  workflow_dispatch:
 permissions:
   contents: read
 env:
   CARGO_TERM_COLOR: always
   SCCACHE_GHA_ENABLED: "true"
   RUSTC_WRAPPER: "sccache"
+  # Enable logging otherwise the logging lines will count as not covered in the test coverage
+  RUST_LOG: trace
 jobs:
   required:
     runs-on: ubuntu-latest
@@ -24,8 +27,6 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
       - name: Install sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.4
-      - name: Run sccache stat for check
-        run: ${SCCACHE_PATH} --show-stats
       - name: cargo generate-lockfile
         if: hashFiles('Cargo.lock') == ''
         run: cargo generate-lockfile
@@ -50,8 +51,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Install sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.4
-      - name: Run sccache stat for check
-        run: ${SCCACHE_PATH} --show-stats
       - name: cargo generate-lockfile
         if: hashFiles('Cargo.lock') == ''
         run: cargo generate-lockfile
@@ -70,16 +69,15 @@ jobs:
           components: llvm-tools-preview
       - name: Install sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.4
-      - name: Run sccache stat for check
-        run: ${SCCACHE_PATH} --show-stats
       - name: cargo install cargo-tarpaulin
         uses: taiki-e/install-action@cargo-tarpaulin
       - name: cargo generate-lockfile
         if: hashFiles('Cargo.lock') == ''
         run: cargo generate-lockfile
       - name: cargo tarpaulin
-        run: cargo tarpaulin --engine llvm --locked --all-features --out lcov
+        run: cargo tarpaulin --engine llvm --locked --all-features --ignore-tests --lib --out xml -- --test-threads 1
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v4
         with:
+          token: ${{secrets.CODECOV_TOKEN}}
           fail_ci_if_error: true

@@ -9,7 +9,11 @@ permissions:
   contents: read
 # Spend CI time only on latest ref
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  # Run for each PR or branch, we group by workflow file and reference (e.g. `main` or
+  # `refs/pull/<pr_number>/merge` or `refs/tags/<tag_name>`). See the value of [github.ref].
+  #
+  # [github.ref]: https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
 jobs:
   check:
