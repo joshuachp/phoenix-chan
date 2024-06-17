@@ -1,6 +1,7 @@
 name: check
 on:
   workflow_call:
+  workflow_dispatch:
 permissions:
   contents: read
 env:
@@ -39,8 +40,6 @@ jobs:
           components: clippy
       - name: Install sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.4
-      - name: Run sccache stat for check
-        run: ${SCCACHE_PATH} --show-stats
       - name: cargo clippy
         run: cargo clippy --all-targets --all-features --workspace -- -D warnings
   doc:
@@ -54,8 +53,6 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
       - name: Install sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.4
-      - name: Run sccache stat for check
-        run: ${SCCACHE_PATH} --show-stats
       - name: cargo doc
         run: cargo doc --no-deps --all-features --workspace
         env:
@@ -71,8 +68,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Install sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.4
-      - name: Run sccache stat for check
-        run: ${SCCACHE_PATH} --show-stats
       - name: cargo install cargo-hack
         uses: taiki-e/install-action@cargo-hack
       - name: cargo hack
@@ -94,12 +89,12 @@ jobs:
         uses: taiki-e/install-action@cargo-minimal-versions
       - name: Install sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.4
-      - name: Run sccache stat for check
-        run: ${SCCACHE_PATH} --show-stats
       - name: rustup default stable
         run: rustup default stable
       - name: Check minimal versions
-        run: cargo minimal-versions check --workspace --ignore-private --detach-path-deps --direct
+        run: cargo minimal-versions check --workspace --ignore-private --detach-path-deps=skip-exact --direct
+        env:
+          RUSTFLAGS: -D warnings
   msrv:
     runs-on: ubuntu-latest
     strategy:
@@ -116,7 +111,5 @@ jobs:
           toolchain: ${{ matrix.msrv }}
       - name: Install sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.4
-      - name: Run sccache stat for check
-        run: ${SCCACHE_PATH} --show-stats
       - name: cargo +${{ matrix.msrv }} check
-        run: cargo check --workspace
+        run: cargo check --all-features --workspace

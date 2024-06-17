@@ -1,6 +1,7 @@
 name: safety
 on:
   workflow_call:
+  workflow_dispatch:
 permissions:
   contents: read
 env:
@@ -18,8 +19,6 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
       - name: Install sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.4
-      - name: Run sccache stat for check
-        run: ${SCCACHE_PATH} --show-stats
       - run: |
             # to get the symbolizer for debug symbol resolution
             sudo apt install llvm
@@ -63,8 +62,6 @@ jobs:
           components: miri
       - name: Install sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.4
-      - name: Run sccache stat for check
-        run: ${SCCACHE_PATH} --show-stats
       - name: cargo miri test
         run: cargo miri test
         env:
@@ -79,8 +76,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Install sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.4
-      - name: Run sccache stat for check
-        run: ${SCCACHE_PATH} --show-stats
       - name: cargo test --test loom
         run: cargo test --release --test loom
         env:
