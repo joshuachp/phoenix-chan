@@ -24,7 +24,7 @@ jobs:
       - name: Install nightly
         uses: dtolnay/rust-toolchain@nightly
       - name: Install sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.5
+        uses: mozilla-actions/sccache-action@v0.0.6
       - name: cargo generate-lockfile
         if: hashFiles('Cargo.lock') == ''
         run: cargo generate-lockfile
@@ -47,7 +47,7 @@ jobs:
         uses: dtolnay/rust-toolchain@beta
       - name: Install sccache-cache
         if: hashFiles('Cargo.lock') != ''
-        uses: mozilla-actions/sccache-action@v0.0.5
+        uses: mozilla-actions/sccache-action@v0.0.6
       - name: cargo update
         if: hashFiles('Cargo.lock') != ''
         run: cargo update
