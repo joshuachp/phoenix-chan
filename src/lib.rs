@@ -1,14 +1,20 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+//! Client library for Phoenix channels.
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#![warn(
+    missing_docs,
+    rustdoc::missing_crate_level_docs,
+    clippy::todo,
+    rustdoc::broken_intra_doc_links
+)]
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub mod builder;
+pub mod client;
+pub mod error;
+
+pub use self::builder::Builder;
+pub use self::client::Client;
+pub use self::error::Error;
+
+// pub dependencies
+pub use rustls;
+pub use tungstenite;
