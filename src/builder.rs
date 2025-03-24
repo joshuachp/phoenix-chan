@@ -39,7 +39,7 @@ impl Builder {
     /// Returns a new instance with defaults set.
     #[must_use]
     pub fn new(uri: Uri) -> Self {
-        let client_req = ClientRequestBuilder::new(uri.clone()).with_sub_protocol("phoenix");
+        let client_req = ClientRequestBuilder::new(uri.clone());
 
         Self {
             uri,
@@ -82,6 +82,8 @@ impl Builder {
         let encoded = BASE_64.encode(token);
 
         self.auth_token = Some(format!("{AUTH_TOKEN_PREFIX}{encoded}"));
+
+        self.client_req = self.client_req.with_sub_protocol("phoenix");
 
         self
     }
