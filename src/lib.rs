@@ -18,6 +18,7 @@ pub type Map = rustc_hash::FxHashMap<String, String>;
 pub use self::builder::Builder;
 pub use self::client::Client;
 pub use self::error::Error;
+pub use self::message::Message;
 
 // pub dependencies
 pub use rustls;

@@ -88,12 +88,12 @@ impl Client {
     }
 
     /// Leaves a channel.
-    pub async fn leave(&mut self, topic: &str) -> Result<Id, Error> {
+    pub async fn leave(&self, topic: &str) -> Result<Id, Error> {
         self.send(topic, "phx_leave", Map::default()).await
     }
 
     /// Sends an event on a topic
-    pub async fn send<P>(&mut self, topic: &str, event: &str, payload: P) -> Result<Id, Error>
+    pub async fn send<P>(&self, topic: &str, event: &str, payload: P) -> Result<Id, Error>
     where
         P: Serialize,
     {
