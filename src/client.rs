@@ -157,12 +157,13 @@ impl Client {
         let val = self
             .sent
             .compare_exchange(true, false, Ordering::SeqCst, Ordering::Acquire);
-        Ok(match val {
+
+        match val {
             Ok(val) => {
-                debug_assert_eq!(val, true)
+                debug_assert!(val);
             }
             Err(val) => {
-                debug_assert_eq!(val, false);
+                debug_assert!(!val);
 
                 let heartbeat = ChannelMsg {
                     join_reference: None,
@@ -174,6 +175,8 @@ impl Client {
 
                 self.write_msg(heartbeat).await?;
             }
-        })
+        }
+
+        Ok(())
     }
 }
