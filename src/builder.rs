@@ -1,6 +1,7 @@
 //! Configures a [`Client`]
 
 use std::sync::Arc;
+use std::time::Duration;
 
 use async_tungstenite::tokio::connect_async_with_tls_connector_and_config;
 use base64::Engine;
@@ -20,6 +21,9 @@ const AUTH_TOKEN_PREFIX: &str = "base64url.bearer.phx.";
 
 const BASE_64: base64::engine::GeneralPurpose = base64::prelude::BASE64_URL_SAFE_NO_PAD;
 
+const DEFAULT_TIMEOUT: Duration = Duration::from_secs(10);
+const DEFAULT_HEARTBEAT: Duration = Duration::from_secs(DEFAULT_TIMEOUT.as_secs() / 2);
+
 /// Builder to configure a [`Client`]
 #[derive(Debug)]
 pub struct Builder {
@@ -28,10 +32,12 @@ pub struct Builder {
     ws_config: WebSocketConfig,
     tls_config: Option<Arc<ClientConfig>>,
     auth_token: Option<String>,
+    heartbeat: Duration,
 }
 
 impl Builder {
     /// Returns a new instance with defaults set.
+    #[must_use]
     pub fn new(uri: Uri) -> Self {
         let client_req = ClientRequestBuilder::new(uri.clone()).with_sub_protocol("phoenix");
 
@@ -41,10 +47,13 @@ impl Builder {
             ws_config: WebSocketConfig::default(),
             tls_config: None,
             auth_token: None,
+            // https://github.com/phoenixframework/phoenix/blob/ad1a7ee2c9c29ff102b94242fdbb9cb14dd0dd4b/assets/js/phoenix/constants.js#L6
+            heartbeat: DEFAULT_HEARTBEAT,
         }
     }
 
     /// Configure the [`WebSocketConfig`]
+    #[must_use]
     pub fn ws_config(mut self, ws_config: WebSocketConfig) -> Self {
         self.ws_config = ws_config;
 
@@ -52,6 +61,7 @@ impl Builder {
     }
 
     /// Add headers to the client connection request.
+    #[must_use]
     pub fn add_header(mut self, key: String, value: String) -> Self {
         self.client_req = self.client_req.with_header(key, value);
 
@@ -59,6 +69,7 @@ impl Builder {
     }
 
     /// Add a sub-protocol header to the WebSocket connection.
+    #[must_use]
     pub fn add_sub_protocol(mut self, key: String, value: String) -> Self {
         self.client_req = self.client_req.with_header(key, value);
 
@@ -66,6 +77,7 @@ impl Builder {
     }
 
     /// Set the authentication token to pass to the server.
+    #[must_use]
     pub fn auth_token(mut self, token: &str) -> Self {
         let encoded = BASE_64.encode(token);
 
@@ -75,13 +87,23 @@ impl Builder {
     }
 
     /// Configure the [`WebSocketConfig`]
+    #[must_use]
     pub fn tls_config(mut self, tls_config: Arc<ClientConfig>) -> Self {
         self.tls_config = Some(tls_config);
 
         self
     }
 
+    /// Set the heart-bit interval duration.
+    #[must_use]
+    pub fn heartbeat(mut self, heartbeat: Duration) -> Self {
+        self.heartbeat = heartbeat;
+
+        self
+    }
+
     /// Returns a configured client.
+    #[must_use]
     #[instrument(skip(self), fields(uri = %self.uri))]
     pub async fn connect(mut self) -> Result<Client, Error> {
         if let Some(token) = self.auth_token {
@@ -100,6 +122,6 @@ impl Builder {
 
         trace!(status = %resp.status(), headers = ?resp.headers());
 
-        Ok(Client { connection })
+        Ok(Client::new(connection, self.heartbeat))
     }
 }
