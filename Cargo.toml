@@ -1,5 +1,5 @@
 [package]
-name = "phoneix-chan"
+name = "phoeneix-chan"
 version = "0.1.0"
 categories = ["web-programming::websocket", "asynchronous"]
 edition = "2021"
