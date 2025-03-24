@@ -100,6 +100,6 @@ impl Builder {
 
         trace!(status = %resp.status(), headers = ?resp.headers());
 
-        Ok(Client { connection })
+        Ok(Client::new(connection))
     }
 }
