@@ -32,6 +32,7 @@ pub struct Builder {
 
 impl Builder {
     /// Returns a new instance with defaults set.
+    #[must_use]
     pub fn new(uri: Uri) -> Self {
         let client_req = ClientRequestBuilder::new(uri.clone()).with_sub_protocol("phoenix");
 
@@ -45,6 +46,7 @@ impl Builder {
     }
 
     /// Configure the [`WebSocketConfig`]
+    #[must_use]
     pub fn ws_config(mut self, ws_config: WebSocketConfig) -> Self {
         self.ws_config = ws_config;
 
@@ -52,6 +54,7 @@ impl Builder {
     }
 
     /// Add headers to the client connection request.
+    #[must_use]
     pub fn add_header(mut self, key: String, value: String) -> Self {
         self.client_req = self.client_req.with_header(key, value);
 
@@ -59,6 +62,7 @@ impl Builder {
     }
 
     /// Add a sub-protocol header to the WebSocket connection.
+    #[must_use]
     pub fn add_sub_protocol(mut self, key: String, value: String) -> Self {
         self.client_req = self.client_req.with_header(key, value);
 
@@ -66,6 +70,7 @@ impl Builder {
     }
 
     /// Set the authentication token to pass to the server.
+    #[must_use]
     pub fn auth_token(mut self, token: &str) -> Self {
         let encoded = BASE_64.encode(token);
 
@@ -75,6 +80,7 @@ impl Builder {
     }
 
     /// Configure the [`WebSocketConfig`]
+    #[must_use]
     pub fn tls_config(mut self, tls_config: Arc<ClientConfig>) -> Self {
         self.tls_config = Some(tls_config);
 
@@ -82,6 +88,7 @@ impl Builder {
     }
 
     /// Returns a configured client.
+    #[must_use]
     #[instrument(skip(self), fields(uri = %self.uri))]
     pub async fn connect(mut self) -> Result<Client, Error> {
         if let Some(token) = self.auth_token {

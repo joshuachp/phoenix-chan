@@ -4,6 +4,7 @@ use std::borrow::Cow;
 
 use async_tungstenite::tokio::ConnectStream;
 use async_tungstenite::WebSocketStream;
+use futures::StreamExt;
 use tungstenite::http::Uri;
 use tungstenite::Message;
 
@@ -88,5 +89,14 @@ impl Client {
             })?;
 
         Ok(id)
+    }
+
+    /// Returns the next message in any channel.
+    pub async fn recv(&mut self) -> Result<Message, Error> {
+        let Some(res) = self.connection.next().await else {
+            return Err(Error::Disconnected);
+        };
+
+        res.map_err(Error::Recv)
     }
 }

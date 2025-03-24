@@ -20,4 +20,10 @@ pub enum Error {
         /// Backtrace error
         backtrace: tungstenite::Error,
     },
+    /// Couldn't receive the message
+    #[error("couldn't receive the message")]
+    Recv(#[source] tungstenite::Error),
+    /// Disconnected from the web socket
+    #[error("the web-socket disconnected")]
+    Disconnected,
 }

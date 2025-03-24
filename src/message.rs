@@ -15,7 +15,7 @@ use crate::Map;
 pub struct Message {
     /// The `join_reference` is also chosen by the client and should also be a unique value.
     ///
-    /// It only needs to be sent for a "phx_join" event; for other messages it can be null. It is
+    /// It only needs to be sent for a `phx_join` event; for other messages it can be null. It is
     /// used as a message reference for push messages from the server, meaning those that are not
     /// replies to a specific client message. For example, imagine something like "a new user just
     /// joined the chat room".
@@ -27,10 +27,10 @@ pub struct Message {
     /// The `topic_name` must be a known topic for the socket endpoint, and a client must join that
     /// topic before sending any messages on it.
     pub topic_name: String,
-    /// The `event_name` must match the first argument of a handle_in function on the server channel
+    /// The `event_name` must match the first argument of a `handle_in` function on the server channel
     /// module.
     pub event_name: String,
-    /// The `payload` should be a map and is passed as the second argument to that handle_in
+    /// The `payload` should be a map and is passed as the second argument to that `handle_in`
     /// function.
     pub payload: Map,
 }
@@ -182,7 +182,7 @@ where
         let Ok(s) = serde_json::to_string(self) else {
             return write!(
                 f,
-                r#"[{:?}, {:?}, {:?}, {:?}, {:?}]"#,
+                "[{:?}, {:?}, {:?}, {:?}, {:?}]",
                 self.join_reference,
                 self.message_reference,
                 self.topic_name,
