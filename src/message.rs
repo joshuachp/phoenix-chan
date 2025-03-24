@@ -1,5 +1,6 @@
 //! Messages sent from and to the phoenix channel.
 
+use std::borrow::Cow;
 use std::fmt::{Debug, Display};
 use std::marker::PhantomData;
 
@@ -7,12 +8,10 @@ use serde::de::Visitor;
 use serde::ser::SerializeSeq;
 use serde::{Deserialize, Serialize};
 
-use crate::Map;
-
 /// Message received from the channel.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
-pub struct Message {
+pub struct Message<P> {
     /// The `join_reference` is also chosen by the client and should also be a unique value.
     ///
     /// It only needs to be sent for a `phx_join` event; for other messages it can be null. It is
@@ -32,16 +31,13 @@ pub struct Message {
     pub event_name: String,
     /// The `payload` should be a map and is passed as the second argument to that `handle_in`
     /// function.
-    pub payload: Map,
+    pub payload: P,
 }
 
-impl<S> From<ChannelMsg<S>> for Message
-where
-    S: Into<String>,
-{
-    fn from(value: ChannelMsg<S>) -> Self {
+impl<'a, P> From<ChannelMsg<'a, P>> for Message<P> {
+    fn from(value: ChannelMsg<'a, P>) -> Self {
         Self {
-            join_reference: value.join_reference.map(S::into),
+            join_reference: value.join_reference.map(Cow::into),
             message_reference: value.message_reference.into(),
             topic_name: value.topic_name.into(),
             event_name: value.event_name.into(),
@@ -50,7 +46,10 @@ where
     }
 }
 
-impl Display for Message {
+impl<P> Display for Message<P>
+where
+    P: Serialize + Debug,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "[")?;
         ser_or_debug(&self.join_reference, f)?;
@@ -78,17 +77,29 @@ where
 }
 
 #[derive(Debug)]
-pub(crate) struct ChannelMsg<S = String> {
-    pub(crate) join_reference: Option<S>,
-    pub(crate) message_reference: S,
-    pub(crate) topic_name: S,
-    pub(crate) event_name: S,
-    pub(crate) payload: Map,
+pub(crate) struct ChannelMsg<'a, P> {
+    pub(crate) join_reference: Option<Cow<'a, str>>,
+    pub(crate) message_reference: Cow<'a, str>,
+    pub(crate) topic_name: Cow<'a, str>,
+    pub(crate) event_name: Cow<'a, str>,
+    pub(crate) payload: P,
 }
 
-impl<T> Serialize for ChannelMsg<T>
+impl<'a, P> ChannelMsg<'a, P> {
+    pub(crate) fn into_err(self) -> Message<()> {
+        Message {
+            join_reference: self.join_reference.map(Cow::into),
+            message_reference: self.message_reference.into(),
+            topic_name: self.topic_name.into(),
+            event_name: self.event_name.into(),
+            payload: (),
+        }
+    }
+}
+
+impl<'a, P> Serialize for ChannelMsg<'a, P>
 where
-    T: Serialize,
+    P: Serialize,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -104,9 +115,9 @@ where
     }
 }
 
-impl<'de, T> Deserialize<'de> for ChannelMsg<T>
+impl<'de, 'a, P> Deserialize<'de> for ChannelMsg<'a, P>
 where
-    T: Deserialize<'de>,
+    P: Deserialize<'de>,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -115,15 +126,15 @@ where
         use serde::de::Error;
 
         #[derive(Debug)]
-        struct ChannelMsgVisitor<T> {
-            _marker: PhantomData<T>,
+        struct ChannelMsgVisitor<'a, P> {
+            _marker: PhantomData<(Cow<'a, str>, P)>,
         }
 
-        impl<'de, T> Visitor<'de> for ChannelMsgVisitor<T>
+        impl<'de, 'a, P> Visitor<'de> for ChannelMsgVisitor<'a, P>
         where
-            T: Deserialize<'de>,
+            P: Deserialize<'de>,
         {
-            type Value = ChannelMsg<T>;
+            type Value = ChannelMsg<'a, P>;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
                 write!(
@@ -158,7 +169,7 @@ where
                     return Err(A::Error::invalid_length(4, &"5"));
                 };
 
-                Ok(ChannelMsg::<T> {
+                Ok(ChannelMsg::<P> {
                     join_reference,
                     message_reference,
                     topic_name,
@@ -168,15 +179,15 @@ where
             }
         }
 
-        deserializer.deserialize_seq(ChannelMsgVisitor::<T> {
+        deserializer.deserialize_seq(ChannelMsgVisitor::<'a, P> {
             _marker: PhantomData,
         })
     }
 }
 
-impl<S> Display for ChannelMsg<S>
+impl<'a, P> Display for ChannelMsg<'a, P>
 where
-    S: Serialize + Debug + Display,
+    P: Serialize + Debug,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Ok(s) = serde_json::to_string(self) else {
