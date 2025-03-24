@@ -85,7 +85,7 @@ pub(crate) struct ChannelMsg<'a, P> {
     pub(crate) payload: P,
 }
 
-impl<'a, P> ChannelMsg<'a, P> {
+impl<P> ChannelMsg<'_, P> {
     pub(crate) fn into_err(self) -> Message<()> {
         Message {
             join_reference: self.join_reference.map(Cow::into),
@@ -97,7 +97,7 @@ impl<'a, P> ChannelMsg<'a, P> {
     }
 }
 
-impl<'a, P> Serialize for ChannelMsg<'a, P>
+impl<P> Serialize for ChannelMsg<'_, P>
 where
     P: Serialize,
 {
@@ -185,7 +185,7 @@ where
     }
 }
 
-impl<'a, P> Display for ChannelMsg<'a, P>
+impl<P> Display for ChannelMsg<'_, P>
 where
     P: Serialize + Debug,
 {

@@ -75,7 +75,7 @@ impl Client {
         let id = self.next_id();
 
         let msg = ChannelMsg {
-            join_reference: Some(Cow::Owned(id.to_string().into())),
+            join_reference: Some(Cow::Owned(id.to_string())),
             message_reference: Cow::Owned(id.to_string()),
             topic_name: Cow::Borrowed(topic),
             event_name: Cow::Borrowed("phx_join"),
