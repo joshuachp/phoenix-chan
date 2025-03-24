@@ -1,6 +1,7 @@
 //! Configures a [`Client`]
 
 use std::sync::Arc;
+use std::time::Duration;
 
 use async_tungstenite::tokio::connect_async_with_tls_connector_and_config;
 use base64::Engine;
@@ -20,6 +21,9 @@ const AUTH_TOKEN_PREFIX: &str = "base64url.bearer.phx.";
 
 const BASE_64: base64::engine::GeneralPurpose = base64::prelude::BASE64_URL_SAFE_NO_PAD;
 
+const DEFAULT_TIMEOUT: Duration = Duration::from_secs(10);
+const DEFAULT_HEARTBEAT: Duration = Duration::from_secs(DEFAULT_TIMEOUT.as_secs() / 2);
+
 /// Builder to configure a [`Client`]
 #[derive(Debug)]
 pub struct Builder {
@@ -28,6 +32,7 @@ pub struct Builder {
     ws_config: WebSocketConfig,
     tls_config: Option<Arc<ClientConfig>>,
     auth_token: Option<String>,
+    heartbeat: Duration,
 }
 
 impl Builder {
@@ -42,6 +47,8 @@ impl Builder {
             ws_config: WebSocketConfig::default(),
             tls_config: None,
             auth_token: None,
+            // https://github.com/phoenixframework/phoenix/blob/ad1a7ee2c9c29ff102b94242fdbb9cb14dd0dd4b/assets/js/phoenix/constants.js#L6
+            heartbeat: DEFAULT_HEARTBEAT,
         }
     }
 
@@ -87,6 +94,14 @@ impl Builder {
         self
     }
 
+    /// Set the heart-bit interval duration.
+    #[must_use]
+    pub fn heartbeat(mut self, heartbeat: Duration) -> Self {
+        self.heartbeat = heartbeat;
+
+        self
+    }
+
     /// Returns a configured client.
     #[must_use]
     #[instrument(skip(self), fields(uri = %self.uri))]
@@ -107,6 +122,6 @@ impl Builder {
 
         trace!(status = %resp.status(), headers = ?resp.headers());
 
-        Ok(Client::new(connection))
+        Ok(Client::new(connection, self.heartbeat))
     }
 }
