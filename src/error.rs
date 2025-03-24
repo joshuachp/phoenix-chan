@@ -18,7 +18,7 @@ pub enum Error {
     #[error("couldn't send message {msg}")]
     Send {
         /// The message that was sent
-        msg: Message,
+        msg: Message<()>,
         #[source]
         /// Backtrace error
         backtrace: tungstenite::Error,

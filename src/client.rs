@@ -10,6 +10,8 @@ use async_tungstenite::tokio::ConnectStream;
 use async_tungstenite::WebSocketStream;
 use futures::stream::{SplitSink, SplitStream};
 use futures::{SinkExt, StreamExt};
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 use tokio::sync::Mutex;
 use tungstenite::http::Uri;
 
@@ -62,19 +64,22 @@ impl Client {
 
     /// Joins a channel.
     pub async fn join(&self, topic: &str) -> Result<Id, Error> {
-        self.join_with_params(topic, Map::default()).await
+        self.join_with_payload(topic, Map::default()).await
     }
 
     /// Joins a channel with additional parameters.
-    pub async fn join_with_params(&self, topic: &str, params: Map) -> Result<Id, Error> {
+    pub async fn join_with_payload<P>(&self, topic: &str, payload: P) -> Result<Id, Error>
+    where
+        P: Serialize,
+    {
         let id = self.next_id();
 
-        let msg = ChannelMsg::<Cow<str>> {
-            join_reference: Some(Cow::Owned(id.to_string())),
+        let msg = ChannelMsg {
+            join_reference: Some(Cow::Owned(id.to_string().into())),
             message_reference: Cow::Owned(id.to_string()),
             topic_name: Cow::Borrowed(topic),
             event_name: Cow::Borrowed("phx_join"),
-            payload: params,
+            payload,
         };
 
         self.write_msg(msg).await?;
@@ -88,10 +93,13 @@ impl Client {
     }
 
     /// Sends an event on a topic
-    pub async fn send(&mut self, topic: &str, event: &str, payload: Map) -> Result<Id, Error> {
+    pub async fn send<P>(&mut self, topic: &str, event: &str, payload: P) -> Result<Id, Error>
+    where
+        P: Serialize,
+    {
         let id = self.next_id();
 
-        let msg = ChannelMsg::<Cow<str>> {
+        let msg = ChannelMsg {
             join_reference: None,
             message_reference: Cow::Owned(id.to_string()),
             topic_name: Cow::Borrowed(topic),
@@ -104,7 +112,10 @@ impl Client {
         Ok(id)
     }
 
-    async fn write_msg(&self, msg: ChannelMsg<Cow<'_, str>>) -> Result<(), Error> {
+    async fn write_msg<P>(&self, msg: ChannelMsg<'_, P>) -> Result<(), Error>
+    where
+        P: Serialize,
+    {
         let msg_json = serde_json::to_string(&msg).map_err(Error::Serialize)?;
 
         self.writer
@@ -113,7 +124,7 @@ impl Client {
             .send(tungstenite::Message::Text(msg_json.into()))
             .await
             .map_err(|err| Error::Send {
-                msg: msg.into(),
+                msg: msg.into_err(),
                 backtrace: err,
             })?;
 
@@ -123,14 +134,16 @@ impl Client {
     }
 
     /// Returns the next message in any channel.
-    pub async fn recv(&self) -> Result<Message, Error> {
+    pub async fn recv<P>(&self) -> Result<Message<P>, Error>
+    where
+        P: DeserializeOwned,
+    {
         let msg = self.next_msg().await?;
 
         msg.into_text()
             .map_err(Error::WebSocketMessageType)
             .and_then(|txt| {
-                serde_json::from_str::<ChannelMsg<Cow<str>>>(txt.as_str())
-                    .map_err(Error::Deserialize)
+                serde_json::from_str::<ChannelMsg<P>>(txt.as_str()).map_err(Error::Deserialize)
             })
             .map(Message::from)
     }
