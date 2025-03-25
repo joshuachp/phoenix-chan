@@ -34,6 +34,15 @@ pub struct Message<P> {
     pub payload: P,
 }
 
+impl<P> Message<P> {
+    pub(crate) fn info(&self) -> String {
+        format!(
+            "[{:?}, {:?}, {:?}, {:?}, <payload>]",
+            self.join_reference, self.message_reference, self.topic_name, self.event_name
+        )
+    }
+}
+
 impl<'a, P> From<ChannelMsg<'a, P>> for Message<P> {
     fn from(value: ChannelMsg<'a, P>) -> Self {
         Self {

@@ -13,6 +13,7 @@ use futures::{SinkExt, StreamExt};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use tokio::sync::Mutex;
+use tracing::{debug, instrument, trace};
 use tungstenite::http::Uri;
 
 use crate::message::{ChannelMsg, Message};
@@ -68,6 +69,7 @@ impl Client {
     }
 
     /// Joins a channel with additional parameters.
+    #[instrument(skip(self, payload))]
     pub async fn join_with_payload<P>(&self, topic: &str, payload: P) -> Result<Id, Error>
     where
         P: Serialize,
@@ -82,17 +84,39 @@ impl Client {
             payload,
         };
 
+        debug!(id, "joining topic");
+
         self.write_msg(msg).await?;
+
+        trace!(id, "topic joined");
 
         Ok(id)
     }
 
     /// Leaves a channel.
+    #[instrument(skip(self))]
     pub async fn leave(&self, topic: &str) -> Result<Id, Error> {
-        self.send(topic, "phx_leave", Map::default()).await
+        let id = self.next_id();
+
+        let msg = ChannelMsg {
+            join_reference: None,
+            message_reference: Cow::Owned(id.to_string()),
+            topic_name: Cow::Borrowed(topic),
+            event_name: Cow::Borrowed("phx_leave"),
+            payload: Map::default(),
+        };
+
+        debug!(id, "leaving topic");
+
+        self.write_msg(msg).await?;
+
+        trace!(id, "topic left");
+
+        Ok(id)
     }
 
     /// Sends an event on a topic
+    #[instrument(skip(self, payload))]
     pub async fn send<P>(&self, topic: &str, event: &str, payload: P) -> Result<Id, Error>
     where
         P: Serialize,
@@ -107,16 +131,23 @@ impl Client {
             payload,
         };
 
+        debug!(id, "sending event");
+
         self.write_msg(msg).await?;
+
+        trace!(id, "event sent");
 
         Ok(id)
     }
 
+    #[instrument(skip_all)]
     async fn write_msg<P>(&self, msg: ChannelMsg<'_, P>) -> Result<(), Error>
     where
         P: Serialize,
     {
         let msg_json = serde_json::to_string(&msg).map_err(Error::Serialize)?;
+
+        trace!("writing on socket");
 
         self.writer
             .lock()
@@ -128,48 +159,75 @@ impl Client {
                 backtrace: err,
             })?;
 
+        trace!("update sent flag");
+
         self.sent.store(true, Ordering::Release);
 
         Ok(())
     }
 
     /// Returns the next message in any channel.
+    #[instrument(skip(self))]
     pub async fn recv<P>(&self) -> Result<Message<P>, Error>
     where
         P: DeserializeOwned,
     {
+        trace!("waiting for next message");
+
         let msg = self.next_msg().await?;
+
+        trace!(%msg, "WebSocket message received");
 
         msg.into_text()
             .map_err(Error::WebSocketMessageType)
             .and_then(|txt| {
                 serde_json::from_str::<ChannelMsg<P>>(txt.as_str()).map_err(Error::Deserialize)
             })
-            .map(Message::from)
+            .map(|msg| {
+                let msg = Message::from(msg);
+
+                debug!(message = msg.info(), "message received");
+
+                msg
+            })
     }
 
+    #[instrument(skip(self))]
     async fn next_msg(&self) -> Result<tungstenite::Message, Error> {
+        trace!("waiting for reader lock");
         let mut reader = self.reader.lock().await;
         let reader = reader.deref_mut();
 
         let mut receive = reader.receiver.next();
 
-        let next = loop {
+        loop {
+            trace!("waiting for next event or heartbeat");
             match futures::future::select(pin!(reader.heartbeat.tick()), pin!(&mut receive)).await {
                 futures::future::Either::Left((_instant, _next)) => {
+                    trace!("heartbeat interval");
                     self.check_and_send_heartbeat().await?;
                 }
-                futures::future::Either::Right((next, _)) => break next,
-            };
-        };
+                futures::future::Either::Right((None, _)) => {
+                    debug!("WebSocket disconnected");
 
-        next.ok_or(Error::Disconnected)?.map_err(Error::Recv)
+                    return Err(Error::Disconnected);
+                }
+                futures::future::Either::Right((Some(res), _)) => {
+                    trace!("next event");
+
+                    return res.map_err(Error::Recv);
+                }
+            };
+        }
     }
 
+    #[instrument(skip(self))]
     async fn check_and_send_heartbeat(&self) -> Result<(), Error> {
         let val = self
             .sent
             .compare_exchange(true, false, Ordering::SeqCst, Ordering::Acquire);
+
+        trace!(sent_flag = ?val, "heartbeat sent flag");
 
         match val {
             Ok(val) => {
@@ -185,6 +243,8 @@ impl Client {
                     event_name: Cow::Borrowed("heartbeat"),
                     payload: Map::default(),
                 };
+
+                debug!("sending heartbeat");
 
                 self.write_msg(heartbeat).await?;
             }
