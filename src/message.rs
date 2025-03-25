@@ -24,7 +24,7 @@ pub struct Message<P> {
     /// The `message_reference` is chosen by the client and should be a unique value.
     ///
     /// The server includes it in its reply so that the client knows which message the reply is for.
-    pub message_reference: String,
+    pub message_reference: Option<String>,
     /// The `topic_name` must be a known topic for the socket endpoint, and a client must join that
     /// topic before sending any messages on it.
     pub topic_name: String,
@@ -49,7 +49,7 @@ impl<'a, P> From<ChannelMsg<'a, P>> for Message<P> {
     fn from(value: ChannelMsg<'a, P>) -> Self {
         Self {
             join_reference: value.join_reference.map(Cow::into),
-            message_reference: value.message_reference.into(),
+            message_reference: value.message_reference.map(Cow::into),
             topic_name: value.topic_name.into(),
             event_name: value.event_name.into(),
             payload: value.payload,
@@ -90,7 +90,7 @@ where
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct ChannelMsg<'a, P> {
     pub(crate) join_reference: Option<Cow<'a, str>>,
-    pub(crate) message_reference: Cow<'a, str>,
+    pub(crate) message_reference: Option<Cow<'a, str>>,
     pub(crate) topic_name: Cow<'a, str>,
     pub(crate) event_name: Cow<'a, str>,
     pub(crate) payload: P,
@@ -99,14 +99,14 @@ pub(crate) struct ChannelMsg<'a, P> {
 impl<'a, P> ChannelMsg<'a, P> {
     pub(crate) fn new(
         join_reference: Option<Id>,
-        message_reference: Id,
+        message_reference: Option<Id>,
         topic_name: &'a str,
         event_name: &'a str,
         payload: P,
     ) -> Self {
         Self {
-            join_reference: join_reference.map(|id| Cow::from(id.to_string())),
-            message_reference: Cow::Owned(message_reference.to_string()),
+            join_reference: join_reference.map(|id| Cow::Owned(id.to_string())),
+            message_reference: message_reference.map(|id| Cow::Owned(id.to_string())),
             topic_name: Cow::Borrowed(topic_name),
             event_name: Cow::Borrowed(event_name),
             payload,
@@ -116,7 +116,7 @@ impl<'a, P> ChannelMsg<'a, P> {
     pub(crate) fn into_err(self) -> Message<()> {
         Message {
             join_reference: self.join_reference.map(Cow::into),
-            message_reference: self.message_reference.into(),
+            message_reference: self.message_reference.map(Cow::into),
             topic_name: self.topic_name.into(),
             event_name: self.event_name.into(),
             payload: (),
@@ -304,6 +304,28 @@ mod tests {
             "miami:weather",
             "report_emergency",
             Map::from_iter([("category".to_string(), "sharknado".to_string())]),
+        );
+
+        assert_eq!(message, exp);
+
+        let json = serde_json::to_string(&message).unwrap();
+
+        assert_eq!(json, join);
+    }
+
+    #[test]
+    fn serialize_deserialize_no_message_reference() {
+        let join =
+            r#"[null,null,"rooms:test:dashboard_oSgokqqBReiKRg_c1nYqMQ_9899","watch_added",{}]"#;
+
+        let message: ChannelMsg<Map> = serde_json::from_str(&join).unwrap();
+
+        let exp = ChannelMsg::new(
+            None,
+            None,
+            "rooms:test:dashboard_oSgokqqBReiKRg_c1nYqMQ_9899",
+            "watch_added",
+            Map::default(),
         );
 
         assert_eq!(message, exp);

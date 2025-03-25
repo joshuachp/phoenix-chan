@@ -75,7 +75,7 @@ impl Client {
     {
         let id = self.next_id();
 
-        let msg = ChannelMsg::new(Some(id), id, topic, "phx_join", payload);
+        let msg = ChannelMsg::new(Some(id), Some(id), topic, "phx_join", payload);
 
         debug!(id, "joining topic");
 
@@ -91,7 +91,7 @@ impl Client {
     pub async fn leave(&self, topic: &str) -> Result<Id, Error> {
         let id = self.next_id();
 
-        let msg = ChannelMsg::new(None, id, topic, "phx_leave", Map::default());
+        let msg = ChannelMsg::new(None, Some(id), topic, "phx_leave", Map::default());
 
         debug!(id, "leaving topic");
 
@@ -110,7 +110,7 @@ impl Client {
     {
         let id = self.next_id();
 
-        let msg = ChannelMsg::new(None, id, topic, event, payload);
+        let msg = ChannelMsg::new(None, Some(id), topic, event, payload);
 
         debug!(id, "sending event");
 
@@ -219,7 +219,8 @@ impl Client {
 
                 let id = self.next_id();
 
-                let heartbeat = ChannelMsg::new(None, id, "phoenix", "heartbeat", Map::default());
+                let heartbeat =
+                    ChannelMsg::new(None, Some(id), "phoenix", "heartbeat", Map::default());
 
                 debug!(id, "sending heartbeat");
 
