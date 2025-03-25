@@ -12,7 +12,7 @@ pub mod client;
 pub mod error;
 pub mod message;
 
-/// Payload sent as last argument of a [`Message`](create::Message)
+/// Payload sent as last argument of a [`Message`].
 pub type Map = rustc_hash::FxHashMap<String, String>;
 
 pub use self::builder::Builder;

@@ -1,6 +1,6 @@
 [package]
 name = "phoenix-chan"
-version = "0.2.2"
+version = "0.3.0"
 categories = ["web-programming::websocket", "asynchronous"]
 edition = "2021"
 keywords = ["phoenix", "channel", "elixir", "websocket", "async"]
@@ -21,7 +21,8 @@ thiserror = "2.0.0"
 tokio = { version = "~1.43", features = ["sync", "time"] }
 tokio-rustls = "0.26.0"
 tracing = "0.1.0"
-tungstenite = "0.26.0"
+tungstenite = { version = "0.26.0" }
 
 [dev-dependencies]
+pretty_assertions = "1.4.1"
 tokio = { version = "~1.43", features = ["macros"] }

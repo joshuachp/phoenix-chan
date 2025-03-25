@@ -5,6 +5,12 @@ use crate::message::Message;
 /// Error returned by the [`Client`](crate::client::Client) or connection.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// Couldn't add headers to uri.
+    #[error("couldn't add the vsn header to uri")]
+    Uri(#[source] tungstenite::http::uri::InvalidUri),
+    /// Couldn't add headers to uri.
+    #[error("couldn't build the uri with the vsn version")]
+    UriBuild(#[source] tungstenite::http::Error),
     /// Couldn't connect to the web-socket
     #[error("couldn't connect to the web-socket")]
     Connect(#[source] tungstenite::Error),
