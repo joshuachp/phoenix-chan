@@ -24,4 +24,5 @@ tracing = "0.1.0"
 tungstenite = "0.26.0"
 
 [dev-dependencies]
+pretty_assertions = "1.4.1"
 tokio = { version = "~1.43", features = ["macros"] }

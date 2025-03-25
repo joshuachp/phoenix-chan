@@ -1,6 +1,5 @@
 //! Client for the Phoenix channel
 
-use std::borrow::Cow;
 use std::ops::DerefMut;
 use std::pin::pin;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -76,13 +75,7 @@ impl Client {
     {
         let id = self.next_id();
 
-        let msg = ChannelMsg {
-            join_reference: Some(Cow::Owned(id.to_string())),
-            message_reference: Cow::Owned(id.to_string()),
-            topic_name: Cow::Borrowed(topic),
-            event_name: Cow::Borrowed("phx_join"),
-            payload,
-        };
+        let msg = ChannelMsg::new(Some(id), id, topic, "phx_join", payload);
 
         debug!(id, "joining topic");
 
@@ -98,13 +91,7 @@ impl Client {
     pub async fn leave(&self, topic: &str) -> Result<Id, Error> {
         let id = self.next_id();
 
-        let msg = ChannelMsg {
-            join_reference: None,
-            message_reference: Cow::Owned(id.to_string()),
-            topic_name: Cow::Borrowed(topic),
-            event_name: Cow::Borrowed("phx_leave"),
-            payload: Map::default(),
-        };
+        let msg = ChannelMsg::new(None, id, topic, "phx_leave", Map::default());
 
         debug!(id, "leaving topic");
 
@@ -123,13 +110,7 @@ impl Client {
     {
         let id = self.next_id();
 
-        let msg = ChannelMsg {
-            join_reference: None,
-            message_reference: Cow::Owned(id.to_string()),
-            topic_name: Cow::Borrowed(topic),
-            event_name: Cow::Borrowed(event),
-            payload,
-        };
+        let msg = ChannelMsg::new(None, id, topic, event, payload);
 
         debug!(id, "sending event");
 
@@ -236,15 +217,11 @@ impl Client {
             Err(val) => {
                 debug_assert!(!val);
 
-                let heartbeat = ChannelMsg {
-                    join_reference: None,
-                    message_reference: Cow::Owned(self.next_id().to_string()),
-                    topic_name: Cow::Borrowed("phoenix"),
-                    event_name: Cow::Borrowed("heartbeat"),
-                    payload: Map::default(),
-                };
+                let id = self.next_id();
 
-                debug!("sending heartbeat");
+                let heartbeat = ChannelMsg::new(None, id, "phoenix", "heartbeat", Map::default());
+
+                debug!(id, "sending heartbeat");
 
                 self.write_msg(heartbeat).await?;
             }

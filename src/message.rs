@@ -8,6 +8,8 @@ use serde::de::Visitor;
 use serde::ser::SerializeSeq;
 use serde::{Deserialize, Serialize};
 
+use crate::client::Id;
+
 /// Message received from the channel.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
@@ -85,7 +87,7 @@ where
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct ChannelMsg<'a, P> {
     pub(crate) join_reference: Option<Cow<'a, str>>,
     pub(crate) message_reference: Cow<'a, str>,
@@ -94,7 +96,23 @@ pub(crate) struct ChannelMsg<'a, P> {
     pub(crate) payload: P,
 }
 
-impl<P> ChannelMsg<'_, P> {
+impl<'a, P> ChannelMsg<'a, P> {
+    pub(crate) fn new(
+        join_reference: Option<Id>,
+        message_reference: Id,
+        topic_name: &'a str,
+        event_name: &'a str,
+        payload: P,
+    ) -> Self {
+        Self {
+            join_reference: join_reference.map(|id| Cow::from(id.to_string())),
+            message_reference: Cow::Owned(message_reference.to_string()),
+            topic_name: Cow::Borrowed(topic_name),
+            event_name: Cow::Borrowed(event_name),
+            payload,
+        }
+    }
+
     pub(crate) fn into_err(self) -> Message<()> {
         Message {
             join_reference: self.join_reference.map(Cow::into),
@@ -212,5 +230,86 @@ where
         };
 
         write!(f, "{s}")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use pretty_assertions::assert_eq;
+
+    use crate::Map;
+
+    use super::*;
+
+    #[test]
+    fn serialize_deserialize_join() {
+        let join = r#"["0","0","miami:weather","phx_join",{"some":"param"}]"#;
+
+        let message: ChannelMsg<Map> = serde_json::from_str(&join).unwrap();
+
+        let exp = ChannelMsg::new(
+            Some(0),
+            Some(0),
+            "miami:weather",
+            "phx_join",
+            Map::from_iter([("some".to_string(), "param".to_string())]),
+        );
+
+        assert_eq!(message, exp);
+
+        let json = serde_json::to_string(&message).unwrap();
+
+        assert_eq!(json, join);
+    }
+
+    #[test]
+    fn serialize_deserialize_leave() {
+        let join = r#"[null,"1","miami:weather","phx_leave",{}]"#;
+
+        let message: ChannelMsg<Map> = serde_json::from_str(&join).unwrap();
+
+        let exp = ChannelMsg::new(None, Some(1), "miami:weather", "phx_leave", Map::default());
+
+        assert_eq!(message, exp);
+
+        let json = serde_json::to_string(&message).unwrap();
+
+        assert_eq!(json, join);
+    }
+
+    #[test]
+    fn serialize_deserialize_heartbit() {
+        let join = r#"[null,"2","phoenix","heartbeat",{}]"#;
+
+        let message: ChannelMsg<Map> = serde_json::from_str(&join).unwrap();
+
+        let exp = ChannelMsg::new(None, Some(2), "phoenix", "heartbeat", Map::default());
+
+        assert_eq!(message, exp);
+
+        let json = serde_json::to_string(&message).unwrap();
+
+        assert_eq!(json, join);
+    }
+
+    #[test]
+    fn serialize_deserialize_send_example() {
+        let join = r#"[null,"3","miami:weather","report_emergency",{"category":"sharknado"}]"#;
+
+        let message: ChannelMsg<Map> = serde_json::from_str(&join).unwrap();
+
+        let exp = ChannelMsg::new(
+            None,
+            Some(3),
+            "miami:weather",
+            "report_emergency",
+            Map::from_iter([("category".to_string(), "sharknado".to_string())]),
+        );
+
+        assert_eq!(message, exp);
+
+        let json = serde_json::to_string(&message).unwrap();
+
+        assert_eq!(json, join);
     }
 }
