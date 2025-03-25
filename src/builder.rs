@@ -7,7 +7,8 @@ use async_tungstenite::tokio::connect_async_with_tls_connector_and_config;
 use base64::Engine;
 use rustls::ClientConfig;
 use tokio_rustls::TlsConnector;
-use tracing::{instrument, trace};
+use tracing::trace;
+use tungstenite::http::uri::PathAndQuery;
 use tungstenite::http::Uri;
 use tungstenite::protocol::WebSocketConfig;
 use tungstenite::ClientRequestBuilder;
@@ -27,7 +28,6 @@ const DEFAULT_HEARTBEAT: Duration = Duration::from_secs(DEFAULT_TIMEOUT.as_secs(
 /// Builder to configure a [`Client`]
 #[derive(Debug)]
 pub struct Builder {
-    uri: Uri,
     client_req: ClientRequestBuilder,
     ws_config: WebSocketConfig,
     tls_config: Option<Arc<ClientConfig>>,
@@ -38,18 +38,37 @@ pub struct Builder {
 impl Builder {
     /// Returns a new instance with defaults set.
     #[must_use]
-    pub fn new(uri: Uri) -> Self {
+    pub fn new(mut uri: Uri) -> Result<Self, Error> {
+        let has_vsn = uri
+            .query()
+            .is_some_and(|s| s.split('&').any(|s| s.starts_with("vsn=")));
+
+        if !has_vsn {
+            let pq = match uri.query() {
+                Some(query) if !query.is_empty() => {
+                    PathAndQuery::try_from(format!("{}?{query}&vsn=2.0.0", uri.path()))
+                        .map_err(Error::Uri)?
+                }
+                Some(_) | None => PathAndQuery::try_from(format!("{}?vsn=2.0.0", uri.path()))
+                    .map_err(Error::Uri)?,
+            };
+
+            uri = tungstenite::http::uri::Builder::from(uri)
+                .path_and_query(pq)
+                .build()
+                .map_err(Error::UriBuild)?;
+        }
+
         let client_req = ClientRequestBuilder::new(uri.clone());
 
-        Self {
-            uri,
+        Ok(Self {
             client_req,
             ws_config: WebSocketConfig::default(),
             tls_config: None,
             auth_token: None,
             // https://github.com/phoenixframework/phoenix/blob/ad1a7ee2c9c29ff102b94242fdbb9cb14dd0dd4b/assets/js/phoenix/constants.js#L6
             heartbeat: DEFAULT_HEARTBEAT,
-        }
+        })
     }
 
     /// Configure the [`WebSocketConfig`]
@@ -106,7 +125,6 @@ impl Builder {
 
     /// Returns a configured client.
     #[must_use]
-    #[instrument(skip(self), fields(uri = %self.uri))]
     pub async fn connect(mut self) -> Result<Client, Error> {
         if let Some(token) = self.auth_token {
             self.client_req = self.client_req.with_sub_protocol(token);

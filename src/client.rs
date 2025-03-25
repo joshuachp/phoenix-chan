@@ -58,7 +58,7 @@ impl Client {
     }
 
     /// Returns a builder to configure the client.
-    pub fn builder(uri: Uri) -> Builder {
+    pub fn builder(uri: Uri) -> Result<Builder, Error> {
         Builder::new(uri)
     }
 
