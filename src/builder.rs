@@ -37,7 +37,6 @@ pub struct Builder {
 
 impl Builder {
     /// Returns a new instance with defaults set.
-    #[must_use]
     pub fn new(mut uri: Uri) -> Result<Self, Error> {
         let has_vsn = uri
             .query()
@@ -124,7 +123,6 @@ impl Builder {
     }
 
     /// Returns a configured client.
-    #[must_use]
     pub async fn connect(mut self) -> Result<Client, Error> {
         if let Some(token) = self.auth_token {
             self.client_req = self.client_req.with_sub_protocol(token);

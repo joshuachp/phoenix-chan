@@ -245,7 +245,7 @@ mod tests {
     fn serialize_deserialize_join() {
         let join = r#"["0","0","miami:weather","phx_join",{"some":"param"}]"#;
 
-        let message: ChannelMsg<Map> = serde_json::from_str(&join).unwrap();
+        let message: ChannelMsg<Map> = serde_json::from_str(join).unwrap();
 
         let exp = ChannelMsg::new(
             Some(0),
@@ -266,7 +266,7 @@ mod tests {
     fn serialize_deserialize_leave() {
         let join = r#"[null,"1","miami:weather","phx_leave",{}]"#;
 
-        let message: ChannelMsg<Map> = serde_json::from_str(&join).unwrap();
+        let message: ChannelMsg<Map> = serde_json::from_str(join).unwrap();
 
         let exp = ChannelMsg::new(None, Some(1), "miami:weather", "phx_leave", Map::default());
 
@@ -281,7 +281,7 @@ mod tests {
     fn serialize_deserialize_heartbit() {
         let join = r#"[null,"2","phoenix","heartbeat",{}]"#;
 
-        let message: ChannelMsg<Map> = serde_json::from_str(&join).unwrap();
+        let message: ChannelMsg<Map> = serde_json::from_str(join).unwrap();
 
         let exp = ChannelMsg::new(None, Some(2), "phoenix", "heartbeat", Map::default());
 
@@ -296,7 +296,7 @@ mod tests {
     fn serialize_deserialize_send_example() {
         let join = r#"[null,"3","miami:weather","report_emergency",{"category":"sharknado"}]"#;
 
-        let message: ChannelMsg<Map> = serde_json::from_str(&join).unwrap();
+        let message: ChannelMsg<Map> = serde_json::from_str(join).unwrap();
 
         let exp = ChannelMsg::new(
             None,
@@ -318,7 +318,7 @@ mod tests {
         let join =
             r#"[null,null,"rooms:test:dashboard_oSgokqqBReiKRg_c1nYqMQ_9899","watch_added",{}]"#;
 
-        let message: ChannelMsg<Map> = serde_json::from_str(&join).unwrap();
+        let message: ChannelMsg<Map> = serde_json::from_str(join).unwrap();
 
         let exp = ChannelMsg::new(
             None,
