@@ -1,6 +1,6 @@
 [package]
 name = "phoenix-chan"
-version = "0.3.0"
+version = "0.4.0"
 categories = ["web-programming::websocket", "asynchronous"]
 edition = "2021"
 keywords = ["phoenix", "channel", "elixir", "websocket", "async"]
