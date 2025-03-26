@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use std::fmt::{Debug, Display};
 use std::marker::PhantomData;
 
-use serde::de::Visitor;
+use serde::de::{DeserializeOwned, Visitor};
 use serde::ser::SerializeSeq;
 use serde::{Deserialize, Serialize};
 
@@ -62,10 +62,13 @@ impl Message<serde_json::Value> {
     ///
     /// This makes it possible to match on the [`topic_name`](Message::topic_name) and
     /// [`event_name`](Message::event_name) to differentiate the various responses.
-    pub fn deserialize_payload<P>(self) -> Result<Self, serde_json::error::Error> {
+    pub fn deserialize_payload<P>(self) -> Result<Message<P>, serde_json::error::Error>
+    where
+        P: DeserializeOwned,
+    {
         let payload = serde_json::from_value(self.payload)?;
 
-        Ok(Self {
+        Ok(Message {
             join_reference: self.join_reference,
             message_reference: self.message_reference,
             topic_name: self.topic_name,
@@ -258,6 +261,47 @@ mod tests {
     use crate::Map;
 
     use super::*;
+
+    #[test]
+    fn deserialize_payload_to_struct() {
+        let join = Message {
+            join_reference: Some("0".to_string()),
+            message_reference: Some("0".to_string()),
+            topic_name: "phoenix".to_string(),
+            event_name: "phx_reply".to_string(),
+            payload: serde_json::Value::Object(serde_json::Map::from_iter([
+                (
+                    "status".to_string(),
+                    serde_json::Value::String("ok".to_string()),
+                ),
+                (
+                    "response".to_string(),
+                    serde_json::Value::Object(serde_json::Map::default()),
+                ),
+            ])),
+        };
+
+        #[derive(Debug, Deserialize, PartialEq, Eq)]
+        struct Payload {
+            status: String,
+            response: Map,
+        }
+
+        let exp = Message {
+            join_reference: join.join_reference.clone(),
+            message_reference: join.message_reference.clone(),
+            topic_name: join.topic_name.clone(),
+            event_name: join.event_name.clone(),
+            payload: Payload {
+                status: "ok".to_string(),
+                response: Map::default(),
+            },
+        };
+
+        let message: Message<Payload> = join.deserialize_payload().unwrap();
+
+        assert_eq!(message, exp);
+    }
 
     #[test]
     fn serialize_deserialize_join() {
