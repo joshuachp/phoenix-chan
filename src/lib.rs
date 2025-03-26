@@ -22,4 +22,5 @@ pub use self::message::Message;
 
 // pub dependencies
 pub use rustls;
+pub use serde_json;
 pub use tungstenite;

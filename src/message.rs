@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use std::fmt::{Debug, Display};
 use std::marker::PhantomData;
 
-use serde::de::Visitor;
+use serde::de::{DeserializeOwned, Visitor};
 use serde::ser::SerializeSeq;
 use serde::{Deserialize, Serialize};
 
@@ -54,6 +54,24 @@ impl<'a, P> From<ChannelMsg<'a, P>> for Message<P> {
             event_name: value.event_name.into(),
             payload: value.payload,
         }
+    }
+}
+
+impl Message<serde_json::Value> {
+    /// Deserialize the value in a specific payload type.
+    ///
+    /// This makes it possible to match on the [`topic_name`](Message::topic_name) and
+    /// [`event_name`](Message::event_name) to differentiate the various responses.
+    pub fn deserialize_payload<P>(self) -> Result<Self, serde_json::error::Error> {
+        let payload = serde_json::from_value(self.payload)?;
+
+        Ok(Self {
+            join_reference: self.join_reference,
+            message_reference: self.message_reference,
+            topic_name: self.topic_name,
+            event_name: self.event_name,
+            payload,
+        })
     }
 }
 
