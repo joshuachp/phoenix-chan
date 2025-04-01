@@ -15,12 +15,12 @@ base64 = "0.22.0"
 futures = "0.3.0"
 rustc-hash = "2.0.0"
 rustls = "0.23.0"
-serde = { version = "1.0.0", features = ["alloc", "derive"] }
-serde_json = { version = "1.0.0", features = ["alloc"] }
-thiserror = "2.0.0"
-tokio = { version = "~1.43", features = ["sync", "time"] }
+serde = { version = "1.0.118", features = ["alloc", "derive"] }
+serde_json = { version = "1.0.60", features = ["alloc"] }
+thiserror = "2.0.7"
+tokio = { version = "1.43.0", features = ["sync", "time"] }
 tokio-rustls = "0.26.0"
-tracing = "0.1.0"
+tracing = "0.1.20"
 tungstenite = { version = "0.26.0" }
 
 [dev-dependencies]
