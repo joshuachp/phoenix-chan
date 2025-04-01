@@ -1,0 +1,38 @@
+default_install_hook_types: [pre-commit, commit-msg]
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+  - repo: https://github.com/joshuachp/pre-commit-hooks
+    rev: v0.2.0
+    hooks:
+      - id: committed
+      - id: typos
+      - id: rust-fmt
+      - id: rust-build
+      - id: rust-clippy
+      - id: rust-doc
+      - id: rust-nextest
+      - id: rust-test-doc
+      - id: rust-hack
+      - id: rust-min-ver
+      - id: sh-fmt
+      - id: sh-check
+      - id: run-dprint
+        types_or:
+          - toml
+      - id: run-prettier
+        types_or:
+          - markdown
+  - repo: local
+    hooks:
+      - id: rust-msrv
+        name: check rust msrv
+        description: Check the MSRV
+        language: system
+        pass_filenames: false
+        entry: cargo +1.78 hack --no-dev-deps check --workspace -p astarte-device-sdk
