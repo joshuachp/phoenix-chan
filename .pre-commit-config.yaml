@@ -8,14 +8,14 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
   - repo: https://github.com/joshuachp/pre-commit-hooks
-    rev: v0.2.0
+    rev: v0.3.2
     hooks:
       - id: committed
       - id: typos
       - id: rust-fmt
       - id: rust-build
       - id: rust-clippy
-      - id: rust-doc
+      - id: rust-cargo-docs-rs
       - id: rust-nextest
       - id: rust-test-doc
       - id: rust-hack
@@ -28,6 +28,7 @@ repos:
       - id: run-prettier
         types_or:
           - markdown
+          - yaml
   - repo: local
     hooks:
       - id: rust-msrv
