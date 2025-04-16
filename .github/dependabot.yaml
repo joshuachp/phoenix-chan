@@ -4,8 +4,23 @@ updates:
     directory: /
     schedule:
       interval: weekly
+  # Minor updates
   - package-ecosystem: cargo
+    versioning-strategy: lockfile-only
     directory: /
-    versioning-strategy: increase-if-necessary
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+  # Major updates
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-patch
+          - version-update:semver-minor
