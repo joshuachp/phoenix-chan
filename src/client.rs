@@ -135,6 +135,7 @@ impl Client {
             .await
             .send(tungstenite::Message::Text(msg_json.into()))
             .await
+            .map_err(Box::new)
             .map_err(|err| Error::Send {
                 msg: msg.into_err(),
                 backtrace: err,
@@ -160,6 +161,7 @@ impl Client {
         trace!(%msg, "WebSocket message received");
 
         msg.into_text()
+            .map_err(Box::new)
             .map_err(Error::WebSocketMessageType)
             .and_then(|txt| {
                 serde_json::from_str::<ChannelMsg<P>>(txt.as_str()).map_err(Error::Deserialize)
@@ -196,7 +198,7 @@ impl Client {
                 futures::future::Either::Right((Some(res), _)) => {
                     trace!("next event");
 
-                    return res.map_err(Error::Recv);
+                    return res.map_err(Box::new).map_err(Error::Recv);
                 }
             };
         }
