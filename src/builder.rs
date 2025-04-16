@@ -136,6 +136,7 @@ impl Builder {
             Some(self.ws_config),
         )
         .await
+        .map_err(Box::new)
         .map_err(Error::Connect)?;
 
         trace!(status = %resp.status(), headers = ?resp.headers());
