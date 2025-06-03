@@ -27,7 +27,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
       - uses: dtolnay/rust-toolchain@1.78
       - uses: dtolnay/rust-toolchain@stable
-      - uses: taiki-e/install-action@v2.52.1
+      - uses: taiki-e/install-action@v2.52.4
         with:
           tool: cargo-hack,cargo-minimal-versions,cargo-nextest,cargo-docs-rs,dprint,typos-cli
       # install npm deps
