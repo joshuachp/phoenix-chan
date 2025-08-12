@@ -19,7 +19,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - name: create new release
         uses: release-plz/action@v0.5.110
@@ -40,7 +40,7 @@ jobs:
       group: release-plz-${{ github.ref }}
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - name: create release pr
         uses: release-plz/action@v0.5.110
