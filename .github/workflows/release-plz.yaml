@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - name: create new release
-        uses: release-plz/action@v0.5.113
+        uses: release-plz/action@v0.5.114
         with:
           command: release
         env:
@@ -43,7 +43,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - name: create release pr
-        uses: release-plz/action@v0.5.113
+        uses: release-plz/action@v0.5.114
         with:
           command: release-pr
         env:
