@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3](https://github.com/joshuachp/phoenix-chan/compare/v0.4.2...v0.4.3) - 2025-12-02
+
+### Other
+
+- Merge pull request #109 from joshuachp/dependabot/github_actions/actions/setup-python-6.1.0
+
 ## [0.4.2](https://github.com/joshuachp/phoenix-chan/compare/v0.4.1...v0.4.2) - 2025-04-01
 
 ### Other
