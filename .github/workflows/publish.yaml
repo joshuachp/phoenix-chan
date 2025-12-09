@@ -8,6 +8,8 @@ on:
 # Only needs to clone the repository
 permissions:
   contents: read
+  # crates.io login
+  id-token: write
 # Safer shell
 defaults:
   run:
