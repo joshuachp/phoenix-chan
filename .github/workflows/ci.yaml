@@ -5,43 +5,21 @@ on:
   push:
     branches:
       - main
+      - release-*
 permissions:
   contents: read
+env:
+  CI: "true"
 # Spend CI time only on latest ref
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  # Run for each PR or branch, we group by workflow file and reference (e.g. `main` or
+  # `refs/pull/<pr_number>/merge` or `refs/tags/<tag_name>`). See the value of [github.ref].
+  #
+  # [github.ref]: https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
-defaults:
-  run:
-    shell: bash
-env:
-  SCCACHE_GHA_ENABLED: "true"
-  RUSTC_WRAPPER: "sccache"
 jobs:
   check:
-    runs-on: ubuntu-24.04
-    steps:
-      # install cache
-      - uses: mozilla-actions/sccache-action@v0.0.9
-      # install rust tools
-      - uses: dtolnay/rust-toolchain@nightly
-      - uses: dtolnay/rust-toolchain@1.78
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: taiki-e/install-action@v2.62.64
-        with:
-          tool: cargo-hack,cargo-minimal-versions,cargo-nextest,cargo-docs-rs,dprint,typos-cli
-      # install npm deps
-      - run: npm install --global prettier
-      # checkout
-      - uses: actions/checkout@v6
-      # install pre-commit
-      - uses: actions/setup-python@v6.1.0
-        with:
-          python-version: 3
-      - name: install pre-commit
-        run: python -m pip install pre-commit
-      - uses: actions/cache@v4.3.0
-        with:
-          path: ~/.cache/pre-commit
-          key: pre-commit|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
-      - run: pre-commit run --show-diff-on-failure --color=always --all-files
+    uses: ./.github/workflows/check.yaml
+  test:
+    uses: ./.github/workflows/test.yaml
