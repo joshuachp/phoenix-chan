@@ -61,8 +61,9 @@ jobs:
       - uses: ./.github/actions/install-deps
       - uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
       - uses: mozilla-actions/sccache-action@v0.0.9
-      - name: cargo install cargo-hack
-        uses: taiki-e/install-action@cargo-hack
+      - uses: taiki-e/install-action@v2.49.43
+        with:
+          tool: cargo-hack
       - name: cargo hack test
         # Doesn't test all combination of features, but the space is becoming too large and it takes
         # too long
@@ -102,7 +103,9 @@ jobs:
         with:
           toolchain: ${{ matrix.msrv }}
       - uses: mozilla-actions/sccache-action@v0.0.9
-      - uses: taiki-e/install-action@cargo-hack
+      - uses: taiki-e/install-action@v2.49.43
+        with:
+          tool: cargo-hack
       - name: cargo +${{ matrix.msrv }} check
         run: cargo +${{ matrix.msrv }} hack --no-dev-deps check --all-features -p "$MAIN_CRATE"
   # Run semver-check on release branch push or PR
