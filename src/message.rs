@@ -2,10 +2,8 @@
 
 use std::borrow::Cow;
 use std::fmt::{Debug, Display};
-use std::marker::PhantomData;
 
-use serde::de::{DeserializeOwned, Visitor};
-use serde::ser::SerializeSeq;
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
 use crate::client::Id;
@@ -153,13 +151,22 @@ where
     where
         S: serde::Serializer,
     {
-        let mut s = serializer.serialize_seq(Some(5))?;
-        s.serialize_element(&self.join_reference)?;
-        s.serialize_element(&self.message_reference)?;
-        s.serialize_element(&self.topic_name)?;
-        s.serialize_element(&self.event_name)?;
-        s.serialize_element(&self.payload)?;
-        s.end()
+        let Self {
+            join_reference,
+            message_reference,
+            topic_name,
+            event_name,
+            payload,
+        } = self;
+
+        (
+            join_reference,
+            message_reference,
+            topic_name,
+            event_name,
+            payload,
+        )
+            .serialize(serializer)
     }
 }
 
@@ -171,64 +178,15 @@ where
     where
         D: serde::Deserializer<'de>,
     {
-        use serde::de::Error;
+        let (join_reference, message_reference, topic_name, event_name, payload) =
+            Deserialize::deserialize(deserializer)?;
 
-        #[derive(Debug)]
-        struct ChannelMsgVisitor<'a, P> {
-            _marker: PhantomData<(Cow<'a, str>, P)>,
-        }
-
-        impl<'de, 'a, P> Visitor<'de> for ChannelMsgVisitor<'a, P>
-        where
-            P: Deserialize<'de>,
-        {
-            type Value = ChannelMsg<'a, P>;
-
-            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-                write!(
-                    formatter,
-                    "a sequence of 5 elements for a valid Phoenix channel"
-                )
-            }
-
-            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-            where
-                A: serde::de::SeqAccess<'de>,
-            {
-                if let Some(len) = seq.size_hint() {
-                    if len != 5 {
-                        return Err(A::Error::invalid_length(len, &"5"));
-                    }
-                }
-
-                let Some(join_reference) = seq.next_element()? else {
-                    return Err(A::Error::invalid_length(0, &"5"));
-                };
-                let Some(message_reference) = seq.next_element()? else {
-                    return Err(A::Error::invalid_length(1, &"5"));
-                };
-                let Some(topic_name) = seq.next_element()? else {
-                    return Err(A::Error::invalid_length(2, &"5"));
-                };
-                let Some(event_name) = seq.next_element()? else {
-                    return Err(A::Error::invalid_length(3, &"5"));
-                };
-                let Some(payload) = seq.next_element()? else {
-                    return Err(A::Error::invalid_length(4, &"5"));
-                };
-
-                Ok(ChannelMsg::<P> {
-                    join_reference,
-                    message_reference,
-                    topic_name,
-                    event_name,
-                    payload,
-                })
-            }
-        }
-
-        deserializer.deserialize_seq(ChannelMsgVisitor::<'a, P> {
-            _marker: PhantomData,
+        Ok(Self {
+            join_reference,
+            message_reference,
+            topic_name,
+            event_name,
+            payload,
         })
     }
 }

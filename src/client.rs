@@ -6,9 +6,8 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::Duration;
 
 use async_tungstenite::tokio::ConnectStream;
-use async_tungstenite::WebSocketStream;
-use futures::stream::{SplitSink, SplitStream};
-use futures::{SinkExt, StreamExt};
+use async_tungstenite::{WebSocketReceiver, WebSocketSender, WebSocketStream};
+use futures::StreamExt;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use tokio::sync::Mutex;
@@ -21,8 +20,8 @@ use crate::{Builder, Error, Map};
 /// Id to identify the response of a message sent by the client.
 pub type Id = usize;
 
-type Sender = SplitSink<WebSocketStream<ConnectStream>, tungstenite::Message>;
-type Receiver = SplitStream<WebSocketStream<ConnectStream>>;
+type Sender = WebSocketSender<ConnectStream>;
+type Receiver = WebSocketReceiver<ConnectStream>;
 
 #[derive(Debug)]
 struct Reader {
