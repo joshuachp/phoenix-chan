@@ -36,8 +36,13 @@ body = """
 commit_parsers = [
   { message = "^feat", group = "added" },
   { message = "^changed", group = "changed" },
+  { message = "^refactor", group = "changed" },
   { message = "^deprecated", group = "deprecated" },
   { message = "^fix", group = "fixed" },
   { message = "^security", group = "security" },
+  { message = "^ci", skip = true},
+  { message = "^chore", skip = true},
+  { message = "^build", skip = true},
+  { message = "^Merge", skip = true},
   { message = "^.*", group = "other" },
 ]
