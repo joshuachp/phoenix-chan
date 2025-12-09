@@ -9,6 +9,9 @@ permissions:
   # release pr
   pull-requests: write
   contents: write
+  # crates.io login
+  id-token: write
+# Safer shell
 defaults:
   run:
     shell: bash
