@@ -8,17 +8,17 @@ runs:
   using: "composite"
   steps:
     - name: Install Linux (Ubuntu) system dependencies
-      if: ${{ startsWith(inputs.for-image, "ubuntu-") }}
+      if: ${{ startsWith(inputs.for-image, 'ubuntu-') }}
       shell: bash
       run: |
         sudo apt-get -y install "@SYSTEM_DEPS@"
     - name: Install MacOS system dependencies
-      if: ${{ startsWith(inputs.for-image, "macos-") }}
+      if: ${{ startsWith(inputs.for-image, 'macos-') }}
       shell: bash
       run: |
         echo "nothing to install"
     - name: Install Windows system dependencies
-      if: ${{ startsWith(inputs.for-image, "windows-") }}
+      if: ${{ startsWith(inputs.for-image, 'windows-') }}
       shell: bash
       run: |
         echo "nothing to install"
