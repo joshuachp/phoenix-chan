@@ -20,10 +20,10 @@ concurrency:
   cancel-in-progress: true
 jobs:
   check:
-    uses: ./.github/workflows/check.yml
+    uses: ./.github/workflows/check.yaml
   test:
-    uses: ./.github/workflows/test.yml
+    uses: ./.github/workflows/test.yaml
   nostd:
-    uses: ./.github/workflows/nostd.yml
+    uses: ./.github/workflows/nostd.yaml
   safety:
-    uses: ./.github/workflows/safety.yml
+    uses: ./.github/workflows/safety.yaml
