@@ -5,8 +5,11 @@ on:
   push:
     branches:
       - main
+      - release-*
 permissions:
   contents: read
+env:
+  CI: "true"
 # Spend CI time only on latest ref
 concurrency:
   # Run for each PR or branch, we group by workflow file and reference (e.g. `main` or
