@@ -1,0 +1,82 @@
+name: publish
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - release-*
+permissions:
+  # release pr
+  pull-requests: write
+  contents: write
+defaults:
+  run:
+    shell: bash
+env:
+  CI: "true"
+  CARGO_TERM_COLOR: always
+jobs:
+  # Check that the create can be compiled with only the packaged files
+  for-publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - uses: ./.github/actions/install-deps
+      - uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
+      - uses: mozilla-actions/sccache-action@v0.0.9
+      - run: ./scripts/ci/check-for-publish.sh
+  # Release unpublished packages.
+  release:
+    needs: [for-publish]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: release-plz-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - uses: ./.github/actions/install-deps
+      - uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
+      - name: Authenticate with registry
+        uses: rust-lang/crates-io-auth-action@v1.0.3
+        id: auth
+      - name: create new release
+        uses: release-plz/action@v0.5.120
+        with:
+          command: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+
+  # Create a PR with the new versions and changelog, preparing the next release.
+  release-pr:
+    name: release-pr
+    needs: [for-publish]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency:
+      group: release-plz-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - uses: ./.github/actions/install-deps
+      - uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
+      - name: Authenticate with registry
+        uses: rust-lang/crates-io-auth-action@v1.0.3
+        id: auth
+      - name: create release pr
+        uses: release-plz/action@v0.5.120
+        with:
+          command: release-pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
