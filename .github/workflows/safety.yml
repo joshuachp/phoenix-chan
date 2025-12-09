@@ -4,24 +4,29 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+defaults:
+  run:
+    shell: bash
 env:
+  CI: "true"
   CARGO_TERM_COLOR: always
   SCCACHE_GHA_ENABLED: "true"
   RUSTC_WRAPPER: "sccache"
 jobs:
   sanitizers:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-34.04
     steps:
       - uses: actions/checkout@v6
         with:
           submodules: true
-      - name: Install nightly
-        uses: dtolnay/rust-toolchain@nightly
-      - name: Install sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.9
+      - uses: ./.github/actions/install-deps
+      - uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
+        with:
+          toolchain: nightly
+      - uses: mozilla-actions/sccache-action@v0.0.9
       - run: |
           # to get the symbolizer for debug symbol resolution
-          sudo apt install llvm
+          sudo apt-get -y install llvm
           # to fix buggy leak analyzer:
           # https://github.com/japaric/rust-san#unrealiable-leaksanitizer
           # ensure there's a profile.dev section
@@ -37,47 +42,45 @@ jobs:
         name: Enable debug symbols
       - name: cargo test -Zsanitizer=address
         # only --lib --tests b/c of https://github.com/rust-lang/rust/issues/53945
-        run: cargo test --lib --tests --all-features --target x86_64-unknown-linux-gnu
+        run: cargo test --locked --lib --tests --all-features --target x86_64-unknown-linux-gnu
         env:
           ASAN_OPTIONS: "detect_odr_violation=0:detect_leaks=0"
           RUSTFLAGS: "-Z sanitizer=address"
       - name: cargo test -Zsanitizer=leak
-        if: always()
-        run: cargo test --all-features --target x86_64-unknown-linux-gnu
+        run: cargo test --locked --all-features --target x86_64-unknown-linux-gnu
         env:
           LSAN_OPTIONS: "suppressions=lsan-suppressions.txt"
           RUSTFLAGS: "-Z sanitizer=leak"
   miri:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
         with:
           submodules: true
+      - uses: ./.github/actions/install-deps
       - run: |
           echo "NIGHTLY=nightly-$(curl -s https://rust-lang.github.io/rustup-components-history/x86_64-unknown-linux-gnu/miri)" >> $GITHUB_ENV
-      - name: Install ${{ env.NIGHTLY }}
-        uses: dtolnay/rust-toolchain@master
+      - name: rust ${{ env.NIGHTLY }}
+        uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
         with:
           toolchain: ${{ env.NIGHTLY }}
           components: miri
-      - name: Install sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.9
+      - uses: mozilla-actions/sccache-action@v0.0.9
       - name: cargo miri test
         run: cargo miri test
         env:
           MIRIFLAGS: ""
   loom:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
         with:
           submodules: true
-      - name: Install stable
-        uses: dtolnay/rust-toolchain@stable
-      - name: Install sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.9
+      - uses: ./.github/actions/install-deps
+      - uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
+      - uses: mozilla-actions/sccache-action@v0.0.9
       - name: cargo test --test loom
-        run: cargo test --release --test loom
+        run: cargo test --locked --release --test loom
         env:
           LOOM_MAX_PREEMPTIONS: 2
           RUSTFLAGS: "--cfg loom"
