@@ -22,7 +22,7 @@ jobs:
       - uses: ./.github/actions/install-deps
       - uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
       - uses: mozilla-actions/sccache-action@v0.0.9
-      - uses: taiki-e/install-action@v2.65.7
+      - uses: taiki-e/install-action@v2.65.13
         with:
           tool: cargo-nextest
       - name: cargo nextest run
@@ -46,7 +46,7 @@ jobs:
           for-image: "${{ matrix.os }}"
       - uses: actions-rust-lang/setup-rust-toolchain@v1.15.2
       - uses: mozilla-actions/sccache-action@v0.0.9
-      - uses: taiki-e/install-action@v2.65.7
+      - uses: taiki-e/install-action@v2.65.13
         with:
           tool: cargo-nextest
       - name: cargo nextest run
@@ -63,7 +63,7 @@ jobs:
           toolchain: nightly
           components: llvm-tools
       - uses: mozilla-actions/sccache-action@v0.0.9
-      - uses: taiki-e/install-action@v2.65.7
+      - uses: taiki-e/install-action@v2.65.13
         with:
           tool: grcov,rustfilt
       - name: Generate coverage
