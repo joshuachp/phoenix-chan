@@ -8,10 +8,10 @@ use base64::Engine;
 use rustls::ClientConfig;
 use tokio_rustls::TlsConnector;
 use tracing::trace;
-use tungstenite::http::uri::PathAndQuery;
-use tungstenite::http::Uri;
-use tungstenite::protocol::WebSocketConfig;
 use tungstenite::ClientRequestBuilder;
+use tungstenite::http::Uri;
+use tungstenite::http::uri::PathAndQuery;
+use tungstenite::protocol::WebSocketConfig;
 
 use crate::{Client, Error};
 

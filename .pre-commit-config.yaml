@@ -36,4 +36,4 @@ repos:
         description: Check the MSRV
         language: system
         pass_filenames: false
-        entry: cargo +1.78 hack --no-dev-deps check --workspace -p astarte-device-sdk
+        entry: cargo +1.85 hack --no-dev-deps check --workspace -p astarte-device-sdk
