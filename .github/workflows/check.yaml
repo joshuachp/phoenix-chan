@@ -92,7 +92,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        msrv: [1.78] # Rust in Yocto OS image
+        msrv: [1.85]
     name: msrv / ${{ matrix.msrv }}
     steps:
       - uses: actions/checkout@v6
