@@ -48,7 +48,7 @@ jobs:
       - uses: ./.github/actions/install-deps
       - uses: actions-rust-lang/setup-rust-toolchain@v1.15.4
       - name: Authenticate with registry
-        uses: rust-lang/crates-io-auth-action@v1.0.3
+        uses: rust-lang/crates-io-auth-action@v1.0.4
         id: auth
       - name: create new release
         uses: release-plz/action@v0.5.128
@@ -78,7 +78,7 @@ jobs:
       - uses: ./.github/actions/install-deps
       - uses: actions-rust-lang/setup-rust-toolchain@v1.15.4
       - name: Authenticate with registry
-        uses: rust-lang/crates-io-auth-action@v1.0.3
+        uses: rust-lang/crates-io-auth-action@v1.0.4
         id: auth
       - name: create release pr
         uses: release-plz/action@v0.5.128
