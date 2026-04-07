@@ -119,7 +119,7 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1.15.4
       - uses: mozilla-actions/sccache-action@v0.0.9
       - name: Check library API semver breakages
-        uses: obi1kenobi/cargo-semver-checks-action@v2.8
+        uses: obi1kenobi/cargo-semver-checks-action@v2.9
         with:
           release-type: patch
   # Check that the create can be compiled with only the packaged files
