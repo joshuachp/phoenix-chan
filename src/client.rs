@@ -32,6 +32,7 @@ struct Reader {
 /// Connection for the Phoenix channel
 #[derive(Debug)]
 pub struct Client {
+    join_id: AtomicUsize,
     msg_id: AtomicUsize,
     sent: AtomicBool,
     writer: Mutex<Sender>,
@@ -42,7 +43,8 @@ impl Client {
     pub(crate) fn new(connection: WebSocketStream<ConnectStream>, heartbeat: Duration) -> Self {
         let (writer, reader) = connection.split();
         Self {
-            msg_id: AtomicUsize::new(0),
+            join_id: AtomicUsize::new(1),
+            msg_id: AtomicUsize::new(1),
             sent: AtomicBool::new(false),
             writer: Mutex::new(writer),
             reader: Mutex::new(Reader {
@@ -61,6 +63,11 @@ impl Client {
         Builder::new(uri)
     }
 
+    /// Sets the join id.
+    pub fn set_join_id(&self, join_id: usize) {
+        self.join_id.store(join_id, Ordering::Release);
+    }
+
     /// Joins a channel.
     pub async fn join(&self, topic: &str) -> Result<Id, Error> {
         self.join_with_payload(topic, Map::default()).await
@@ -72,33 +79,41 @@ impl Client {
     where
         P: Serialize,
     {
-        let id = self.next_id();
+        let join_id = self.join_id.load(Ordering::Acquire);
+        let msg_id = self.next_id();
 
-        let msg = ChannelMsg::new(Some(id), Some(id), topic, "phx_join", payload);
+        let msg = ChannelMsg::new(Some(join_id), Some(msg_id), topic, "phx_join", payload);
 
-        debug!(id, "joining topic");
+        debug!(msg_id, "joining topic");
 
         self.write_msg(msg).await?;
 
-        trace!(id, "topic joined");
+        trace!(msg_id, "topic joined");
 
-        Ok(id)
+        Ok(msg_id)
     }
 
     /// Leaves a channel.
     #[instrument(skip(self))]
     pub async fn leave(&self, topic: &str) -> Result<Id, Error> {
-        let id = self.next_id();
+        let join_id = self.join_id.load(Ordering::Relaxed);
+        let msg_id = self.next_id();
 
-        let msg = ChannelMsg::new(None, Some(id), topic, "phx_leave", Map::default());
+        let msg = ChannelMsg::new(
+            Some(join_id),
+            Some(msg_id),
+            topic,
+            "phx_leave",
+            Map::default(),
+        );
 
-        debug!(id, "leaving topic");
+        debug!(msg_id, "leaving topic");
 
         self.write_msg(msg).await?;
 
-        trace!(id, "topic left");
+        trace!(msg_id, "topic left");
 
-        Ok(id)
+        Ok(msg_id)
     }
 
     /// Sends an event on a topic
@@ -107,17 +122,18 @@ impl Client {
     where
         P: Serialize,
     {
-        let id = self.next_id();
+        let join_id = self.join_id.load(Ordering::Relaxed);
+        let msg_id = self.next_id();
 
-        let msg = ChannelMsg::new(None, Some(id), topic, event, payload);
+        let msg = ChannelMsg::new(Some(join_id), Some(msg_id), topic, event, payload);
 
-        debug!(id, "sending event");
+        debug!(msg_id, "sending event");
 
         self.write_msg(msg).await?;
 
-        trace!(id, "event sent");
+        trace!(msg_id, "event sent");
 
-        Ok(id)
+        Ok(msg_id)
     }
 
     #[instrument(skip_all)]
