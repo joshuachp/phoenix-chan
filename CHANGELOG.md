@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.5](https://github.com/joshuachp/phoenix-chan/compare/v0.4.4...v0.4.5) - 2026-04-14
+
+### Fixed
+
+- *(join)* add a proper join id to the messages
+
 ## [0.4.4](https://github.com/joshuachp/phoenix-chan/compare/v0.4.3...v0.4.4) - 2026-01-09
 
 ### Added
