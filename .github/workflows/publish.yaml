@@ -27,7 +27,7 @@ jobs:
         with:
           submodules: true
       - uses: ./.github/actions/install-deps
-      - uses: actions-rust-lang/setup-rust-toolchain@v1.15.4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1.16.0
       - uses: mozilla-actions/sccache-action@v0.0.10
       - run: ./scripts/ci/check-for-publish.sh
   # Release unpublished packages.
@@ -46,7 +46,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: ./.github/actions/install-deps
-      - uses: actions-rust-lang/setup-rust-toolchain@v1.15.4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1.16.0
       - name: Authenticate with registry
         uses: rust-lang/crates-io-auth-action@v1.0.4
         id: auth
@@ -76,7 +76,7 @@ jobs:
           submodules: true
           fetch-depth: 0
       - uses: ./.github/actions/install-deps
-      - uses: actions-rust-lang/setup-rust-toolchain@v1.15.4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1.16.0
       - name: Authenticate with registry
         uses: rust-lang/crates-io-auth-action@v1.0.4
         id: auth
