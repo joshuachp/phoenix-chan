@@ -59,7 +59,9 @@ else
     {
         echo '# Code Coverage'
         echo ''
+        echo '```'
         cargo llvm-cov report
+        echo '```'
     } >>"$GITHUB_STEP_SUMMARY"
 fi
 
