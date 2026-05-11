@@ -8,6 +8,7 @@ on:
       - release-*
 permissions:
   contents: read
+  id-token: write
 env:
   CI: "true"
 # Spend CI time only on latest ref
