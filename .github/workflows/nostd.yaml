@@ -1,0 +1,32 @@
+name: no-std
+on:
+  workflow_call:
+  workflow_dispatch:
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+env:
+  CI: "true"
+  CARGO_TERM_COLOR: always
+  SCCACHE_GHA_ENABLED: "true"
+  RUSTC_WRAPPER: "sccache"
+jobs:
+  nostd:
+    runs-on: ubuntu-24.04
+    name: nostd / ${{ matrix.target }}
+    strategy:
+      matrix:
+        target: [thumbv7m-none-eabi, aarch64-unknown-none]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+      - uses: ./.github/actions/install-deps
+      - uses: actions-rust-lang/setup-rust-toolchain@v1.16.0
+        with:
+          target: ${{ matrix.target }}
+      - uses: mozilla-actions/sccache-action@v0.0.10
+      - name: cargo check
+        run: cargo check --locked --target ${{ matrix.target }} --no-default-features

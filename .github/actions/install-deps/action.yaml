@@ -1,0 +1,24 @@
+name: "Install system deps"
+description: "Install dependencies needed to run the jobs"
+inputs:
+  for-image:
+    description: Image the job is running on
+    default: "ubuntu-24.04"
+runs:
+  using: "composite"
+  steps:
+    - name: Install Linux (Ubuntu) system dependencies
+      if: ${{ startsWith(inputs.for-image, 'ubuntu-') }}
+      shell: bash
+      run: |
+        echo "nothing to install"
+    - name: Install MacOS system dependencies
+      if: ${{ startsWith(inputs.for-image, 'macos-') }}
+      shell: bash
+      run: |
+        echo "nothing to install"
+    - name: Install Windows system dependencies
+      if: ${{ startsWith(inputs.for-image, 'windows-') }}
+      shell: bash
+      run: |
+        echo "nothing to install"
