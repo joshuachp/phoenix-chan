@@ -8,6 +8,7 @@ on:
       - release-*
 permissions:
   contents: read
+  id-token: write
 env:
   CI: "true"
 # Spend CI time only on latest ref
@@ -19,7 +20,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
 jobs:
+  common:
+    uses: ./.github/workflows/common.yaml
   check:
     uses: ./.github/workflows/check.yaml
   test:
     uses: ./.github/workflows/test.yaml
+    # Pass Codecov secret
+    secrets: inherit
+  library:
+    uses: ./.github/workflows/library.yaml

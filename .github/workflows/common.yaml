@@ -1,0 +1,26 @@
+name: common
+on:
+  workflow_call:
+  workflow_dispatch:
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+env:
+  CLICOLOR: 1
+jobs:
+  spelling:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: crate-ci/typos@v1.46.0
+  conventional-commit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: crate-ci/committed@v1.1.11
+        with:
+          args: "-vv"
