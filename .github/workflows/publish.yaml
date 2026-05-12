@@ -1,56 +1,48 @@
 name: publish
+# When a release is published or called manually
 on:
   workflow_dispatch:
   push:
     branches:
       - main
-      - release-*
+      - release-[0-9]+.[0-9]+
+# Only needs to clone the repository
 permissions:
-  # release pr
-  pull-requests: write
   contents: write
-  # crates.io login
+  pull-requests: write
   id-token: write
 # Safer shell
 defaults:
   run:
     shell: bash
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  # It's not safe to cancel the publish
+  cancel-in-progress: false
 env:
   CI: "true"
   CARGO_TERM_COLOR: always
 jobs:
-  # Check that the create can be compiled with only the packaged files
-  for-publish:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: true
-      - uses: ./.github/actions/install-deps
-      - uses: actions-rust-lang/setup-rust-toolchain@v1.16.0
-      - uses: mozilla-actions/sccache-action@v0.0.10
-      - run: ./scripts/ci/check-for-publish.sh
   # Release unpublished packages.
-  release:
-    needs: [for-publish]
+  release-plz-release:
+    name: Release-plz release
     runs-on: ubuntu-24.04
+    if: ${{ github.repository_owner == 'joshuachp' }}
     permissions:
       contents: write
       id-token: write
-    concurrency:
-      group: release-plz-${{ github.ref }}
-      cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v6
+      - &checkout
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          submodules: true
-      - uses: ./.github/actions/install-deps
-      - uses: actions-rust-lang/setup-rust-toolchain@v1.16.0
-      - name: Authenticate with registry
-        uses: rust-lang/crates-io-auth-action@v1.0.4
+          persist-credentials: false
+      - &install-rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1.16.0
+      - &login-crates
+        uses: rust-lang/crates-io-auth-action@v1
         id: auth
-      - name: create new release
+      - name: Run release-plz
         uses: release-plz/action@v0.5.128
         with:
           command: release
@@ -59,10 +51,10 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
 
   # Create a PR with the new versions and changelog, preparing the next release.
-  release-pr:
-    name: release-pr
-    needs: [for-publish]
+  release-plz-pr:
+    name: Release-plz PR
     runs-on: ubuntu-24.04
+    if: ${{ github.repository_owner == 'joshuachp' }}
     permissions:
       contents: write
       pull-requests: write
@@ -71,16 +63,10 @@ jobs:
       group: release-plz-${{ github.ref }}
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: true
-          fetch-depth: 0
-      - uses: ./.github/actions/install-deps
-      - uses: actions-rust-lang/setup-rust-toolchain@v1.16.0
-      - name: Authenticate with registry
-        uses: rust-lang/crates-io-auth-action@v1.0.4
-        id: auth
-      - name: create release pr
+      - *checkout
+      - *install-rust
+      - *login-crates
+      - name: Run release-plz
         uses: release-plz/action@v0.5.128
         with:
           command: release-pr

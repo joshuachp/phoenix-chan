@@ -1,0 +1,19 @@
+style = "conventional"
+subject_capitalized = false
+merge_commit = true
+subject_length = 72
+allowed_types = [
+  # User facing
+  "feat",
+  "fix",
+  "perf",
+  "refactor",
+  "deprecate",
+  "removed",
+  "security",
+  # Other
+  "chore",
+  "ci",
+  "style",
+  "test",
+]
