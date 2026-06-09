@@ -13,12 +13,12 @@ jobs:
   spelling:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6.0.2
-      - uses: crate-ci/typos@v1.47.0
+      - uses: actions/checkout@v6.0.3
+      - uses: crate-ci/typos@v1.47.2
   conventional-commit:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6.0.3
         with:
           fetch-depth: 0
       - uses: crate-ci/committed@v1.1.11
