@@ -1,6 +1,6 @@
 [package]
 name = "phoenix-chan"
-version = "0.4.6"
+version = "0.4.7"
 edition = "2024"
 rust-version = "1.85"
 description = "Async Phoenix channle Client library implementation"
