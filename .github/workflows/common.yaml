@@ -14,13 +14,13 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: crate-ci/typos@v1.51.1
+      - uses: crate-ci/typos@v1.52.0
   conventional-commit:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
-      - uses: crate-ci/committed@v1.1.11
+      - uses: crate-ci/committed@v1.1.12
         with:
           args: "-vv"
